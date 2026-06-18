@@ -126,8 +126,8 @@ kajota-arbitrum-dubai/
 ## Sister repos (the AI layer of the agentic chain)
 
 - **Coach Agent v2** (sell-side drafting agent) — [`KaJota-inc/kajota-coach`](https://github.com/KaJota-inc/kajota-coach)
-- **Concierge Agent + mobile** (buy-side autonomous flow) — [`KaJota-inc/kajota-mobile-backend`](https://github.com/KaJota-inc/kajota-mobile-backend) + [`KaJota-inc/kajota`](https://github.com/KaJota-inc/kajota) (branch `hackathon/arbitrum-london`)
-- **Original Mesh multi-chain repo** (Ethereum / Base / Mantle Sepolia) — [`KaJota-inc/kajota-mesh`](https://github.com/KaJota-inc/kajota-mesh) (branch `hackathon/arbitrum-london`)
+- **Concierge Agent + mobile** (buy-side autonomous flow) — [`KaJota-inc/kajota-mobile-backend`](https://github.com/KaJota-inc/kajota-mobile-backend) + [`KaJota-inc/kajota`](https://github.com/KaJota-inc/kajota). The Arbitrum integration lives on `hackathon/arbitrum-london` today; a `hackathon/arbitrum-dubai` branch lands when registration opens.
+- **Original Mesh multi-chain repo** (Ethereum / Base / Mantle Sepolia) — [`KaJota-inc/kajota-mesh`](https://github.com/KaJota-inc/kajota-mesh) (branch `hackathon/arbitrum-london`; same notes as above).
 
 ## Running locally
 
