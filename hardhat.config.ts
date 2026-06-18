@@ -75,11 +75,13 @@ const config: HardhatUserConfig = {
       accounts: deployerAccounts,
       chainId: 5003,
     },
-    // Arbitrum Sepolia — target for Arbitrum Open House London buildathon
-    // (Jun 14, 2026 deadline). EVM-equivalent, so the same bytecode used
-    // on Ethereum Sepolia ports cleanly. Circle USDC is live here
+    // Arbitrum Sepolia — target for Arbitrum Open House Dubai buildathon
+    // (registration opens Oct 31, 2026; submission Nov 16 - Dec 6, 2026).
+    // EVM-equivalent, so the same bytecode used on Ethereum Sepolia ports
+    // cleanly. Circle USDC is live here
     // (0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) and Chainlink Functions
-    // is supported (DON id: fun-arbitrum-sepolia-1).
+    // is supported (DON id: fun-arbitrum-sepolia-1). An Arbitrum One /
+    // Orbit redeploy lands during the Dubai submission window.
     arbitrumSepolia: {
       type: "http",
       chainType: "l1",

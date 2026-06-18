@@ -1,9 +1,9 @@
 {
-  "name": "kajota-arbitrum-london",
+  "name": "kajota-arbitrum-dubai",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Kajota Mesh — agentic-commerce settlement on Arbitrum Sepolia. Arbitrum Open House London 2026 submission.",
+  "description": "Kajota Mesh — agentic-commerce settlement on Arbitrum. Arbitrum Open House Dubai 2026 submission (registration opens Oct 31, 2026).",
   "license": "MIT",
   "scripts": {
     "compile": "hardhat compile",

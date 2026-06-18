@@ -1,8 +1,10 @@
-# Kajota Mesh — Arbitrum Open House London 2026
+# Kajota Mesh — Arbitrum Open House Dubai 2026
 
-> **TL;DR.** Agentic social-commerce settlement on Arbitrum Sepolia. **Kajota Coach** drafts on-chain co-sell listings via a multi-turn AI agent. **Kajota Concierge** runs the buy-side flow. **Mesh** settles the trade trustlessly on Arbitrum, atomically splitting USDC between wholesaler and co-seller the moment delivery is verified.
+> **TL;DR.** Agentic social-commerce settlement on Arbitrum. **Kajota Coach** drafts on-chain co-sell listings via a multi-turn AI agent. **Kajota Concierge** runs the buy-side flow. **Mesh** settles the trade trustlessly on Arbitrum, atomically splitting USDC between wholesaler and co-seller the moment delivery is verified.
 
-**Tracks submitted to:** Overall + Best Agentic Project.
+> **Status — parked until registration opens.** HackQuest registration window: **Oct 31 → Dec 5, 2026.** Submission window: **Nov 16 → Dec 6, 2026.** This repo carries the verified Arbitrum Sepolia build the Dubai submission is anchored on; an Arbitrum One / Orbit redeploy lands during the submission window, and track selection waits on HackQuest publishing the per-track criteria.
+
+**HackQuest project page:** [arbitrum-dubai.hackquest.io/projects/Kajota-Mesh](https://arbitrum-dubai.hackquest.io/projects/Kajota-Mesh)
 
 ## The problem
 
@@ -72,7 +74,7 @@ Both contracts verified on **Arbiscan + Sourcify** — click the `0x…#code` li
 - **The agents take real on-chain actions, not just suggestions.** Coach's `publishListing` tool issues an Arbitrum tx via a wholesaler-signed wallet. Concierge's `executePurchase` tool issues a `CosellEscrow.deposit` tx via the buyer's wallet.
 - **Smart-contract-level guardrails for agent autonomy.** Even if Coach mis-drafts a commission split, the registry's `deactivate-only` semantics mean the wholesaler can't retroactively reduce it after a high-volume month. The chain is the safety layer for the agents.
 
-## Live on-chain happy path (Jun 14, 2026, Arbitrum Sepolia)
+## Live on-chain happy path — Arbitrum Sepolia
 
 Reproducible via `./scripts/arbitrum-demo.sh` against the live contracts. One full Coach→Concierge→Mesh cycle with 1 USDC deposited and atomically split 10%/90% — Arbiscan-verifiable:
 
@@ -103,7 +105,7 @@ Balance delta (USDC, 6-decimal):
 ## Repo layout
 
 ```
-kajota-arbitrum-london/
+kajota-arbitrum-dubai/
 ├── contracts/
 │   ├── CosellRegistry.sol          deployed + verified
 │   ├── CosellEscrow.sol            deployed + verified

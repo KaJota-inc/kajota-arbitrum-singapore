@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # arbitrum-demo.sh — full on-chain happy-path against the live
 # CosellRegistry + CosellEscrow on Arbitrum Sepolia. Use this to
-# screen-record the Arbitrum Open House London buildathon demo:
+# screen-record the Arbitrum Open House Dubai buildathon demo:
 # pair the terminal output with Arbiscan tabs and voice-over the
 # agentic narrative (Coach drafts → Concierge buys → Mesh settles).
 #
@@ -72,7 +72,7 @@ balance_usdc() {
 clear 2>/dev/null || true
 cat <<EOF
 ${BOLD}╔══════════════════════════════════════════════════════════════════╗
-║  Kajota Mesh — Arbitrum Open House London demo                   ║
+║  Kajota Mesh — Arbitrum Open House Dubai demo                    ║
 ║  Coach drafts → Concierge buys → Mesh settles on Arbitrum Sepolia║
 ╚══════════════════════════════════════════════════════════════════╝${RESET}
 
