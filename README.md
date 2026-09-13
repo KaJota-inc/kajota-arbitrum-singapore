@@ -1,10 +1,10 @@
-# Kajota Mesh — Arbitrum Open House Dubai 2026
+# Kajota Mesh — Arbitrum Open House Singapore 2026
 
 > **TL;DR.** Agentic social-commerce settlement on Arbitrum. **Kajota Coach** drafts on-chain co-sell listings via a multi-turn AI agent. **Kajota Concierge** runs the buy-side flow. **Mesh** settles the trade trustlessly on Arbitrum, atomically splitting USDC between wholesaler and co-seller the moment delivery is verified.
 
-> **Status — parked until registration opens.** HackQuest registration window: **Oct 31 → Dec 5, 2026.** Submission window: **Nov 16 → Dec 6, 2026.** This repo carries the verified Arbitrum Sepolia build the Dubai submission is anchored on; an Arbitrum One / Orbit redeploy lands during the submission window, and track selection waits on HackQuest publishing the per-track criteria.
+> **Status — active submission.** Submission window closes **Oct 4, 2026 15:59 Asia/Singapore**. Prize pool $115K USDC (Overall $70K + Promising Products $15K + Grants $30K). Contracts live and verified on Arbitrum Sepolia; deployment on any Arbitrum chain — including Sepolia — satisfies the buildathon deployment requirement.
 
-**HackQuest project page:** [arbitrum-dubai.hackquest.io/projects/Kajota-Mesh](https://arbitrum-dubai.hackquest.io/projects/Kajota-Mesh)
+**HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh)
 
 ## The problem
 
@@ -105,7 +105,7 @@ Balance delta (USDC, 6-decimal):
 ## Repo layout
 
 ```
-kajota-arbitrum-dubai/
+kajota-arbitrum-singapore/
 ├── contracts/
 │   ├── CosellRegistry.sol          deployed + verified
 │   ├── CosellEscrow.sol            deployed + verified
@@ -126,8 +126,8 @@ kajota-arbitrum-dubai/
 ## Sister repos (the AI layer of the agentic chain)
 
 - **Coach Agent v2** (sell-side drafting agent) — [`KaJota-inc/kajota-coach`](https://github.com/KaJota-inc/kajota-coach)
-- **Concierge Agent + mobile** (buy-side autonomous flow) — [`KaJota-inc/kajota-mobile-backend`](https://github.com/KaJota-inc/kajota-mobile-backend) + [`KaJota-inc/kajota`](https://github.com/KaJota-inc/kajota). The Arbitrum integration lives on `hackathon/arbitrum-london` today; a `hackathon/arbitrum-dubai` branch lands when registration opens.
-- **Original Mesh multi-chain repo** (Ethereum / Base / Mantle Sepolia) — [`KaJota-inc/kajota-mesh`](https://github.com/KaJota-inc/kajota-mesh) (branch `hackathon/arbitrum-london`; same notes as above).
+- **Concierge Agent + mobile** (buy-side autonomous flow) — [`KaJota-inc/kajota-mobile-backend`](https://github.com/KaJota-inc/kajota-mobile-backend) + [`KaJota-inc/kajota`](https://github.com/KaJota-inc/kajota). The Arbitrum integration lives on `hackathon/arbitrum-london`; the same contract addresses are reused for the Singapore entry.
+- **Original Mesh multi-chain repo** (Ethereum / Base / Mantle Sepolia) — [`KaJota-inc/kajota-mesh`](https://github.com/KaJota-inc/kajota-mesh) (branch `hackathon/arbitrum-london`; same contracts and deployment).
 
 ## Running locally
 
