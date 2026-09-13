@@ -1,10 +1,12 @@
 # Kajota Mesh — Arbitrum Open House Singapore 2026
 
-> **TL;DR.** Agentic social-commerce settlement on Arbitrum. **Kajota Coach** drafts on-chain co-sell listings via a multi-turn AI agent. **Kajota Concierge** runs the buy-side flow. **Mesh** settles the trade trustlessly on Arbitrum, atomically splitting USDC between wholesaler and co-seller the moment delivery is verified.
+> **Kajota Mesh is the atomic escrow + commission-split settlement primitive for commerce agents on Arbitrum.** USDC in, N-party split out, one tx. Registry semantics are deactivate-only so an agent that drafted a listing can't retroactively cut the counterparty's share after volume lands. **58 unit tests · verified on Arbiscan + Sourcify · live on Arbitrum Sepolia.**
+>
+> Coach (sell-side drafting agent) and Concierge (buy-side purchase agent) are the **reference integration** below — proof the primitive plugs into real agents. Bring your own.
 
-> **Status — active submission.** Submission window closes **Oct 4, 2026 15:59 Asia/Singapore**. Prize pool $115K USDC (Overall $70K + Promising Products $15K + Grants $30K). Contracts live and verified on Arbitrum Sepolia; deployment on any Arbitrum chain — including Sepolia — satisfies the buildathon deployment requirement.
+> **Status — active submission.** Submission window closes **Oct 4, 2026 15:59 Asia/Singapore**. Prize pool $115K USDC (Overall $70K + Promising Products $15K + Grants $30K). Arbitrum Sepolia deployment satisfies the buildathon deployment rule.
 
-**HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh)
+**HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh) · **Stack:** Solidity 0.8.24 · OpenZeppelin 5.1 · viem · Hardhat 3 · Chainlink Functions
 
 ## The problem
 
@@ -97,10 +99,20 @@ Balance delta (USDC, 6-decimal):
 
 | Criterion | Where to look |
 |---|---|
-| Smart contract quality | 58 unit tests across 4 contracts (`pnpm test`). OpenZeppelin 5.1, EVM Cancun, ReentrancyGuard on transfers, prefix-bound Chainlink callbacks. Both production contracts verified on Arbiscan + Sourcify. |
-| Product-market fit | Sister-app Kajota is a Nigerian social-commerce app with co-sellers using off-chain commission splits today. Mesh is the path to remove the trust dependency on the platform. |
-| Innovation / creativity | Multi-agent (Coach + Concierge) commerce loop where the on-chain registry IS the negotiation surface between the agents. Not "AI generates code that touches a chain" — agents are first-class participants in a settled-on-chain trade. |
-| Real problem-solving | Solves a verifiable problem (commission-split trust) for a verifiable user base. Arbitrum's low fees + USDC native make this economically viable for Africa-scale ticket sizes ($5-$50 trades). |
+| Smart contract quality | 58 unit tests across 4 contracts (`pnpm test`), all green. Solidity 0.8.24 + EVM Cancun, OpenZeppelin 5.1, `ReentrancyGuard` on every value-moving path, prefix-bound Chainlink Functions callbacks, deactivate-only registry semantics (no retroactive edits after volume lands). Both production contracts source-verified on **Arbiscan + Sourcify** — click `#code` on any address link and read the Solidity as-deployed. Reproducible on-chain happy path (`./scripts/arbitrum-demo.sh`) with four Arbiscan tx links below. |
+| Product-market fit | Mesh's primitive shape — atomic N-party split at release — maps cleanly onto three commerce agent surfaces already shipping USDC on Arbitrum: (a) co-selling / affiliate flows where a wholesaler agent and a distributor agent must trust the split before any human sees the money, (b) refund pipelines where a dispute agent must be able to move funds without gaining the ability to keep them, and (c) recurring settlements from autonomous purchase agents. Reference integration proof: [`kajota-coach`](https://github.com/KaJota-inc/kajota-coach) already ships a multi-turn drafting agent with a `publishListing` tool that signs `CosellRegistry.register` against these contracts. |
+| Innovation / creativity | Two design decisions that don't show up in most commerce-escrow primitives: **(1) The split is on the release action, not the deposit.** `CosellEscrow.release` takes zero arguments — the split is fully determined by the registry snapshot recorded at deposit time. An agent controlling `releaseAuth` can trigger the release but cannot influence who gets what. **(2) The registry is a coordination surface between adversarial agents.** A drafting agent (Coach) and a purchase agent (Concierge) never need to trust each other's inputs; they only need to trust the registry's immutability. That flips the trust model of most "AI in commerce" pitches from "trust the agent" to "trust the contract, not the agent." |
+| Real problem-solving | Kajota is a live Nigerian social-commerce app with real co-sellers doing off-chain commission splits today; the pain isn't hypothetical. USDC-native + $0.01-tier Arbitrum fees make sub-$1 commissions on $5–$50 trades economically viable — mainnet Ethereum settlement would consume the split. Deploying to Arbitrum isn't decorative: at this ticket size the L2's cost floor is the reason the primitive is possible at all. |
+
+## Positioning vs adjacent Arbitrum work
+
+Adjacent projects that appeared on prior Arbitrum Open House podiums:
+
+- **Pact Network** (Open House London Agentic, 3rd) — risk layer for agentic payments. **Different problem:** Pact assesses counterparty and execution risk *before* funds move; Mesh atomically enforces the agreed split *when* funds move. They stack — a Pact-gated flow that uses Mesh for the settlement leg loses no property of either. Mesh is not trying to price risk.
+- **Fangorn** (Open House NYC, 2nd) — data commerce primitives for the agentic web (Stylus + ERC-8004 + x402). **Different vertical:** Fangorn's primitives compensate agents for producing data; Mesh's primitive settles commerce that agents *coordinate on humans' behalf*. Different sender-vs-recipient shape.
+- **TradeVerus / CapricornDEX / Denaria** (London Open) — trading infrastructure. **Different vertical entirely.**
+
+Mesh's specific slice: **settlement primitive for two-sided agent commerce with a fixed, contract-enforced fee split.** No known Arbitrum podium winner sits on that slice today.
 
 ## Repo layout
 
