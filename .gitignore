@@ -9,3 +9,4 @@ typechain-types/
 coverage/
 .DS_Store
 *.log
+demo/
