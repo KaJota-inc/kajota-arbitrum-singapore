@@ -78,22 +78,24 @@ Both contracts verified on **Arbiscan + Sourcify** — click the `0x…#code` li
 
 ## Live on-chain happy path — Arbitrum Sepolia
 
-Reproducible via `./scripts/arbitrum-demo.sh` against the live contracts. One full Coach→Concierge→Mesh cycle with 1 USDC deposited and atomically split 10%/90% — Arbiscan-verifiable:
+Reproducible via `./scripts/arbitrum-demo.sh` against the live contracts. One full Coach→Concierge→Mesh cycle with 1 USDC deposited and atomically split 10%/90% — Arbiscan-verifiable. Re-run Sep 21, 2026 at 25.15 s wall time:
 
 | Step | Actor | Action | Arbiscan |
 |---|---|---|---|
-| 1 | Wholesaler (Coach) | `CosellRegistry.register` — publishes the listing on-chain | [tx](https://sepolia.arbiscan.io/tx/0xe0a272cd898917d18afb3126d7f8aebdc6fa09b511c6590f4070388b6624c881) |
-| 2 | Buyer (Concierge) | `USDC.approve` — grants the escrow spend allowance | [tx](https://sepolia.arbiscan.io/tx/0xdd026528ffd09823a7d19dc5307276a1a4d711daf04d298c5b2cdad7cec12a96) |
-| 3 | Buyer (Concierge) | `CosellEscrow.deposit` — moves USDC into escrow | [tx](https://sepolia.arbiscan.io/tx/0x99955fe772f2d04a1352536f80d17740f88439d06e72f3dbe287e5ecbd919a44) |
-| 4 | `releaseAuth` (Mesh) | `CosellEscrow.release` — atomic 10%/90% split, no human in the loop | [tx](https://sepolia.arbiscan.io/tx/0xc96a1075e2ba8768a8d6abaf9f5b49fbc296409cf6be76b2c3e8ef06cc4646a8) |
+| 1 | Wholesaler (Coach) | `CosellRegistry.register` — publishes the listing on-chain | [tx](https://sepolia.arbiscan.io/tx/0x9c3696db895ae404e39e83b32336ed481b2f8d11b648e6fe20c75eb9f261afed) |
+| 2 | Buyer (Concierge) | `USDC.approve` — grants the escrow spend allowance | [tx](https://sepolia.arbiscan.io/tx/0xcedfab5127841b8b565b813991799eb9e76223cf412cb68a0a6bedf401ecc151) |
+| 3 | Buyer (Concierge) | `CosellEscrow.deposit` — moves USDC into escrow | [tx](https://sepolia.arbiscan.io/tx/0x6976e867e143dff8244e7b846a79be742b8b08998a9b8b76277e4d2098a46c88) |
+| 4 | `releaseAuth` (Mesh) | `CosellEscrow.release` — atomic 10%/90% split, no human in the loop | [tx](https://sepolia.arbiscan.io/tx/0xf9d5674cf29ff2e577cd7d3d81605efd8d2820075610ab13ee3d8f5170060e42) |
 
 Balance delta (USDC, 6-decimal):
 
 | Wallet | Before | After | Δ |
 |---|---|---|---|
-| Buyer `0xB15E…7380` | 20.000000 | 19.000000 | −1.000000 |
-| Coseller `0x33cd…eb42` | 0.000000 | 0.100000 | +0.100000 (10% commission) |
-| Wholesaler `0xe10C…24A4` | 0.000000 | 0.900000 | +0.900000 (90% remainder) |
+| Buyer `0xB15E…7380` | 15.000000 | 14.000000 | −1.000000 |
+| Coseller `0x33cd…eb42` | 0.500000 | 0.600000 | +0.100000 (10% commission) |
+| Wholesaler `0xe10C…24A4` | 4.500000 | 5.400000 | +0.900000 (90% remainder) |
+
+*Starting balances reflect residual from prior demo runs against the same live contracts. Δ is what matters: 10% / 90% split, atomic, no reserve retained by escrow.*
 
 ## Judging-criteria mapping
 
