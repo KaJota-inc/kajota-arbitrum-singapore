@@ -2,7 +2,7 @@
 
 > **Kajota Mesh is the atomic escrow + commission-split settlement primitive for commerce agents on Arbitrum.** USDC in, N-party split out, one tx. Registry semantics are deactivate-only so an agent that drafted a listing can't retroactively cut its counterparty's share after volume lands.
 >
-> Four composable contracts around the primitive: **v1** (2-party split, live and verified on Arbitrum Sepolia) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). **97 unit tests · v1 verified on Arbiscan + Sourcify · full stack in one deploy.**
+> Four composable contracts around the primitive: **v1** (2-party split) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). **97 unit tests · six-contract live stack verified on Arbiscan + Sourcify · deploys to Arbitrum Sepolia + Robinhood Chain testnet in one script.**
 >
 > Coach (sell-side drafting agent) and Concierge (buy-side purchase agent) are the **reference integration** below — proof the primitive plugs into real agents. Bring your own.
 
@@ -22,17 +22,21 @@ Mesh removes (1) and (3) by moving the trust-critical primitives on-chain. Coach
 
 ## What's deployed on Arbitrum Sepolia
 
-The v1 pair is the live, source-verified settlement primitive:
+All six contracts of the extended primitive are live and source-verified on **Arbiscan + Sourcify** — click any `0x…#code` link to read the Solidity as-deployed.
 
 | Contract | Purpose | Address |
 |---|---|---|
-| `CosellRegistry` | Immutable per-listing record of `{productId, wholesaler, coseller, commissionBps, currency}` — deactivate-only, no retroactive edit. Source verified. | [`0xfce6bd68d8d6f858d447f537d206c1e354b44315`](https://sepolia.arbiscan.io/address/0xfce6bd68d8d6f858d447f537d206c1e354b44315#code) |
-| `CosellEscrow` | Receives USDC, auto-splits at release. `release()` callable only by `releaseAuth`; `refund()` callable by buyer after timeout. Source verified. | [`0x599869cef2e4c52e2c9074caaf8f9fb0cb191776`](https://sepolia.arbiscan.io/address/0x599869cef2e4c52e2c9074caaf8f9fb0cb191776#code) |
-| Circle USDC | Native testnet USDC (6-decimal). | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/token/0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d) |
+| `CosellRegistry` (v1) | Immutable per-listing record of `{productId, wholesaler, coseller, commissionBps, currency}` — deactivate-only, no retroactive edit. | [`0xfce6bd68d8d6f858d447f537d206c1e354b44315`](https://sepolia.arbiscan.io/address/0xfce6bd68d8d6f858d447f537d206c1e354b44315#code) |
+| `CosellEscrow` (v1) | Receives USDC, auto-splits at release. `release()` callable only by `releaseAuth`; `refund()` callable by buyer after timeout. | [`0x599869cef2e4c52e2c9074caaf8f9fb0cb191776`](https://sepolia.arbiscan.io/address/0x599869cef2e4c52e2c9074caaf8f9fb0cb191776#code) |
+| `CosellRegistryV2` | N-party generalisation of v1 — up to 16 recipients with an arbitrary share table that must sum to exactly 10000 basis points. Additive; v1 is not touched. | [`0x5cda1ae03fd8207cb0c7416ddc899fe89a603ef9`](https://sepolia.arbiscan.io/address/0x5cda1ae03fd8207cb0c7416ddc899fe89a603ef9#code) |
+| `CosellEscrowV2` | N-party fan-out at release. Rounding remainder falls to the last recipient by convention; zero dust retained by the escrow. | [`0xce77674ef1f3abcd34370825390f351eb6a8fffd`](https://sepolia.arbiscan.io/address/0xce77674ef1f3abcd34370825390f351eb6a8fffd#code) |
+| `AgentIdentityBinding` | Records `(agentId, homeRegistry, homeChainId, attestationHash)` per caller EOA — the on-chain hop from Arbitrum Sepolia to Coach's **ERC-8004** identity on Mantle Sepolia. | [`0x716d9c1229d38ec6f6cd7a5edd781e757a73f629`](https://sepolia.arbiscan.io/address/0x716d9c1229d38ec6f6cd7a5edd781e757a73f629#code) |
+| `X402DepositFacilitator` | Server-side of the **x402** gasless-deposit flow. Consumes an EIP-3009 `TransferWithAuthorization` from the buyer, pulls USDC, calls `CosellEscrowV2.deposit` in one relay. See [`docs/X402.md`](docs/X402.md). | [`0xdbae565ce0be455e859cd8ff42aec8ad30bbbcf9`](https://sepolia.arbiscan.io/address/0xdbae565ce0be455e859cd8ff42aec8ad30bbbcf9#code) |
+| Circle USDC | Native Arbitrum Sepolia USDC (6-decimal). | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/token/0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d) |
 
-Manifest: [`deployments/421614.json`](deployments/421614.json). Both contracts verified on **Arbiscan + Sourcify** — click the `0x…#code` links above to read the Solidity source rendered by the explorer.
+Manifest: [`deployments/421614.json`](deployments/421614.json).
 
-`CosellRegistryV2`, `CosellEscrowV2`, `AgentIdentityBinding`, and `X402DepositFacilitator` compile and unit-test cleanly in this repo and go live in the next stack push — the full-stack deploy script ships all seven contracts to Arbitrum Sepolia and Robinhood Chain testnet in a single run (`pnpm deploy:arbitrum-sepolia` / `pnpm deploy:robinhood-testnet`).
+`KajotaEscrow` (single-recipient + dispute path) is compiled + tested in-repo and ships alongside the Robinhood Chain testnet deploy — `pnpm deploy:robinhood-testnet` puts every contract above plus `KajotaEscrow` live on the reserved-slot lane in one run.
 
 ## The primitive, extended
 

@@ -6,5 +6,14 @@
   "releaseAuth": "0xe10cff27c99074cd44c64bed1b000226442524a4",
   "registry": "0xfce6bd68d8d6f858d447f537d206c1e354b44315",
   "escrow": "0x599869cef2e4c52e2c9074caaf8f9fb0cb191776",
-  "deployedAt": "2026-06-14T20:39:55.429Z"
+  "deployedAt": "2026-06-14T20:39:55.429Z",
+  "contracts": {
+    "registry": "0xfce6bd68d8d6f858d447f537d206c1e354b44315",
+    "escrow": "0x599869cef2e4c52e2c9074caaf8f9fb0cb191776",
+    "registryV2": "0x5cda1ae03fd8207cb0c7416ddc899fe89a603ef9",
+    "escrowV2": "0xce77674ef1f3abcd34370825390f351eb6a8fffd",
+    "agentIdentityBinding": "0x716d9c1229d38ec6f6cd7a5edd781e757a73f629",
+    "x402DepositFacilitator": "0xdbae565ce0be455e859cd8ff42aec8ad30bbbcf9"
+  },
+  "extensionsDeployedAt": "2026-09-22T13:49:03.769Z"
 }
