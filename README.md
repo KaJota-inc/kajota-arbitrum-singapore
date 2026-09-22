@@ -118,6 +118,26 @@ Balance delta (USDC, 6-decimal):
 
 *Starting balances reflect residual from prior demo runs against the same live contracts. Δ is what matters: 10% / 90% split, atomic, no reserve retained by escrow.*
 
+## Live on-chain happy path — v2 N-party split
+
+Same happy path against `CosellRegistryV2` + `CosellEscrowV2`, this time with **three recipients** on a 20% / 30% / 50% share table. Ran Sep 22, 2026 on Arbitrum Sepolia:
+
+| Step | Actor | Action | Arbiscan |
+|---|---|---|---|
+| 1 | Registrant (Coach) | `CosellRegistryV2.register` — publishes a 3-party listing (shares 2000 / 3000 / 5000 bps) | [tx](https://sepolia.arbiscan.io/tx/0xf151179e23b3efc57bc796887c41ecff8ee57c03124c46d852096fb3a14e2ae2) |
+| 2 | Buyer | `USDC.approve` — grants the v2 escrow the spend allowance | [tx](https://sepolia.arbiscan.io/tx/0x02dca68a5178a1ac0bd549468af4e637be2174aae5717c853869a14bd75ea706) |
+| 3 | Buyer | `CosellEscrowV2.deposit` — 1 USDC into escrow | [tx](https://sepolia.arbiscan.io/tx/0xd746b3fa63c7379d717877b5bb85640a403ac1bea4adae761a20b1f4def60d28) |
+| 4 | `releaseAuth` | `CosellEscrowV2.release` — atomic 3-way fan-out, zero dust | [tx](https://sepolia.arbiscan.io/tx/0xf803675ed70fb88292817a471ac9ebabbe62f887c07ff6786df7b09da7f2d6f3) |
+
+Balance delta (USDC, 6-decimal, 1 USDC deposited):
+
+| Wallet | Share | Received |
+|---|---|---|
+| Recipient A `0x33cd…eb42` | 20% | +0.200000 |
+| Recipient B `0xB15E…7380` | 30% | +0.300000 |
+| Recipient C (registrant) `0xe10C…24A4` | 50% | +0.500000 |
+| **Sum** |  | **+1.000000** — zero dust retained in the escrow |
+
 ## Judging-criteria mapping
 
 | Criterion | Where to look |
