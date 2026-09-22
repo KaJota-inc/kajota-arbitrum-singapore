@@ -1,25 +1,32 @@
 /**
  * Deploy script for Kajota Mesh contracts.
  *
- * Deploys the registry first, then the escrow that references it.
- * On Base Sepolia uses the real Circle testnet USDC; on other
- * chains expects USDC_<NETWORK> env to point at the right ERC20.
+ * Deploys the full stack — v1 (Registry + Escrow), v2 (RegistryV2 +
+ * EscrowV2 = N-party split), and KajotaEscrow (single-recipient with
+ * dispute path) — in one run. Idempotent per chain: writes
+ * deployments/<chainId>.json so re-invocations from a fresh EOA on the
+ * same chain overwrite that manifest cleanly.
+ *
+ * USDC handling:
+ *   - Chains with a canonical Circle USDC address (Arbitrum Sepolia,
+ *     Ethereum Sepolia): use it from the map / env override.
+ *   - Chains without canonical USDC (Robinhood Chain testnet):
+ *     auto-deploy MockUSDC. Buildathon demo flows still work; a Circle-
+ *     bridged USDC swap is a follow-up.
  *
  * Usage:
- *   pnpm --filter @kajota-mesh/contracts deploy:base-sepolia
- *   pnpm --filter @kajota-mesh/contracts deploy:mantle-sepolia
+ *   pnpm deploy:arbitrum-sepolia
+ *   pnpm deploy:robinhood-testnet
  *
  * Required env (see .env.example at the repo root):
  *   DEPLOYER_PRIVATE_KEY  — funded with the chain's testnet ETH
- *   USDC_BASE_SEPOLIA     — Circle USDC address (already filled in
- *                           .env.example for Base Sepolia)
+ *   USDC_<NETWORK>        — canonical USDC address (optional; if
+ *                           unset, MockUSDC is deployed)
  *   INITIAL_RELEASE_AUTH  — optional; defaults to deployer
  *
  * Output:
- *   - prints deployed addresses to stdout
- *   - writes deployments/<chainId>.json so the attestation package
- *     and any downstream agents can read the latest addresses
- *     without grepping logs
+ *   - prints all deployed addresses to stdout
+ *   - writes deployments/<chainId>.json for downstream agents
  */
 import { network } from "hardhat";
 import { getAddress, type Address } from "viem";
@@ -27,18 +34,27 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 const USDC_ADDRESS_BY_CHAIN_ID: Record<number, string | undefined> = {
-  // Ethereum Sepolia — Circle's official testnet USDC. Hardcoded
-  // fallback so the deploy works without an extra .env entry.
+  // Ethereum Sepolia — Circle's official testnet USDC.
   11155111:
     process.env.USDC_ETHEREUM_SEPOLIA ??
     "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-  84532: process.env.USDC_BASE_SEPOLIA, // Base Sepolia
-  5003: process.env.USDC_MANTLE_SEPOLIA, // Mantle Sepolia
-  // Arbitrum Sepolia — Circle's official testnet USDC. Hardcoded
-  // fallback so the deploy works without an extra .env entry.
+  84532: process.env.USDC_BASE_SEPOLIA,
+  5003: process.env.USDC_MANTLE_SEPOLIA,
+  // Arbitrum Sepolia — Circle's official testnet USDC.
   421614:
     process.env.USDC_ARBITRUM_SEPOLIA ??
     "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+  // Robinhood Chain testnet — no canonical Circle USDC yet, override
+  // via env or fall through to the auto-deployed MockUSDC below.
+  46630: process.env.USDC_ROBINHOOD_TESTNET,
+};
+
+const CHAIN_NAMES: Record<number, string> = {
+  11155111: "Ethereum Sepolia",
+  84532: "Base Sepolia",
+  5003: "Mantle Sepolia",
+  421614: "Arbitrum Sepolia",
+  46630: "Robinhood Chain Testnet",
 };
 
 async function main() {
@@ -47,14 +63,19 @@ async function main() {
   const [deployer] = await viem.getWalletClients();
 
   const chainId = await publicClient.getChainId();
-  const CHAIN_NAMES: Record<number, string> = {
-    11155111: "Ethereum Sepolia",
-    84532: "Base Sepolia",
-    5003: "Mantle Sepolia",
-    421614: "Arbitrum Sepolia",
-  };
   const chainName =
     publicClient.chain?.name ?? CHAIN_NAMES[chainId] ?? `chain-${chainId}`;
+
+  // Guardrail: never accidentally deploy to a mainnet whose chainId
+  // rhymes with a testnet id we support (Robinhood mainnet = 4663;
+  // testnet = 46630; off by a factor of 10 in decimal).
+  const KNOWN_MAINNET_IDS = new Set<number>([1, 42161, 8453, 5000, 4663]);
+  if (KNOWN_MAINNET_IDS.has(chainId)) {
+    throw new Error(
+      `Refusing to deploy: chainId ${chainId} looks like a MAINNET. ` +
+        `This repo is testnet-scoped for the buildathon.`,
+    );
+  }
 
   console.log(`\nKajota Mesh — deploy on ${chainName} (chainId ${chainId})`);
   console.log(`Deployer: ${deployer.account.address}`);
@@ -69,14 +90,19 @@ async function main() {
   }
 
   // ---- USDC address ------------------------------------------------
-  const usdcEnvValue = USDC_ADDRESS_BY_CHAIN_ID[chainId];
-  if (!usdcEnvValue) {
-    throw new Error(
-      `No USDC address configured for chainId ${chainId}. Add USDC_<NETWORK> to .env.`,
-    );
+  let usdcAddress: Address;
+  const canonicalUsdc = USDC_ADDRESS_BY_CHAIN_ID[chainId];
+  let mockUsdcDeployed = false;
+  if (canonicalUsdc) {
+    usdcAddress = getAddress(canonicalUsdc) as Address;
+    console.log(`USDC:     ${usdcAddress} (canonical)`);
+  } else {
+    console.log(`USDC:     no canonical address — deploying MockUSDC`);
+    const mock = await viem.deployContract("MockUSDC");
+    usdcAddress = mock.address as Address;
+    mockUsdcDeployed = true;
+    console.log(`  → MockUSDC        @ ${usdcAddress}`);
   }
-  const usdcAddress = getAddress(usdcEnvValue) as Address;
-  console.log(`USDC:     ${usdcAddress}`);
 
   // ---- releaseAuth -------------------------------------------------
   const releaseAuthEnv = process.env.INITIAL_RELEASE_AUTH;
@@ -86,21 +112,46 @@ async function main() {
       : (deployer.account.address as Address);
   console.log(`Release:  ${releaseAuth}\n`);
 
-  // ---- 1. CosellRegistry ------------------------------------------
-  console.log("Deploying CosellRegistry …");
+  // ---- 1. CosellRegistry (v1) --------------------------------------
+  console.log("Deploying CosellRegistry (v1) …");
   const registry = await viem.deployContract("CosellRegistry");
-  console.log(`  → CosellRegistry @ ${registry.address}`);
+  console.log(`  → CosellRegistry  @ ${registry.address}`);
 
-  // ---- 2. CosellEscrow --------------------------------------------
-  console.log("Deploying CosellEscrow …");
+  // ---- 2. CosellEscrow (v1) ----------------------------------------
+  console.log("Deploying CosellEscrow (v1) …");
   const escrow = await viem.deployContract("CosellEscrow", [
     usdcAddress,
     registry.address,
     releaseAuth,
   ]);
-  console.log(`  → CosellEscrow   @ ${escrow.address}\n`);
+  console.log(`  → CosellEscrow    @ ${escrow.address}`);
 
-  // ---- 3. Persist addresses ---------------------------------------
+  // ---- 3. CosellRegistryV2 (N-party) -------------------------------
+  console.log("Deploying CosellRegistryV2 (N-party) …");
+  const registryV2 = await viem.deployContract("CosellRegistryV2");
+  console.log(`  → CosellRegistryV2 @ ${registryV2.address}`);
+
+  // ---- 4. CosellEscrowV2 (N-party) ---------------------------------
+  console.log("Deploying CosellEscrowV2 (N-party) …");
+  const escrowV2 = await viem.deployContract("CosellEscrowV2", [
+    usdcAddress,
+    registryV2.address,
+    releaseAuth,
+  ]);
+  console.log(`  → CosellEscrowV2   @ ${escrowV2.address}`);
+
+  // ---- 5. KajotaEscrow (single-recipient + dispute) ----------------
+  // Note: KajotaEscrow takes (usdc, disputeResolver). Dispute resolver
+  // defaults to the deployer for testnet demos; production should
+  // rotate to a multisig via setDisputeResolver().
+  console.log("Deploying KajotaEscrow (dispute-flavored) …");
+  const kajotaEscrow = await viem.deployContract("KajotaEscrow", [
+    usdcAddress,
+    releaseAuth, // reuse the same address as the dispute resolver on testnet
+  ]);
+  console.log(`  → KajotaEscrow     @ ${kajotaEscrow.address}\n`);
+
+  // ---- 6. Persist addresses ---------------------------------------
   const deploymentsDir = path.resolve(
     import.meta.dirname,
     "..",
@@ -112,9 +163,15 @@ async function main() {
     chainName,
     deployer: deployer.account.address,
     usdc: usdcAddress,
+    usdcSource: mockUsdcDeployed ? "MockUSDC (this repo)" : "canonical",
     releaseAuth,
-    registry: registry.address,
-    escrow: escrow.address,
+    contracts: {
+      registry: registry.address,
+      escrow: escrow.address,
+      registryV2: registryV2.address,
+      escrowV2: escrowV2.address,
+      kajotaEscrow: kajotaEscrow.address,
+    },
     deployedAt: new Date().toISOString(),
   };
   const outPath = path.join(deploymentsDir, `${chainId}.json`);
@@ -122,7 +179,7 @@ async function main() {
   console.log(`Wrote ${outPath}`);
 
   console.log("\nDone. Next steps:");
-  console.log("  1. Verify on Basescan:");
+  console.log(`  1. Verify all contracts on the block explorer for ${chainName}:`);
   console.log(
     `     npx hardhat verify --network ${network.name} ${registry.address}`,
   );
@@ -130,9 +187,20 @@ async function main() {
     `     npx hardhat verify --network ${network.name} ${escrow.address} \\\n` +
       `       ${usdcAddress} ${registry.address} ${releaseAuth}`,
   );
-  console.log("  2. Fund the deployer with Base Sepolia USDC for E2E test:");
-  console.log("     https://faucet.circle.com (pick Base Sepolia)");
-  console.log("  3. Wire Chainlink Functions consumer to releaseAuth.");
+  console.log(
+    `     npx hardhat verify --network ${network.name} ${registryV2.address}`,
+  );
+  console.log(
+    `     npx hardhat verify --network ${network.name} ${escrowV2.address} \\\n` +
+      `       ${usdcAddress} ${registryV2.address} ${releaseAuth}`,
+  );
+  console.log(
+    `     npx hardhat verify --network ${network.name} ${kajotaEscrow.address} \\\n` +
+      `       ${usdcAddress} ${releaseAuth}`,
+  );
+  console.log(
+    "  2. Update scripts/arbitrum-demo.sh + demo/SHOT_LIST.md with the new addresses.",
+  );
 }
 
 main().catch((err) => {

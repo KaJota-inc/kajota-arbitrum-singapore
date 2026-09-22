@@ -10,6 +10,7 @@
     "test": "hardhat test",
     "clean": "hardhat clean",
     "deploy:arbitrum-sepolia": "hardhat run --network arbitrumSepolia scripts/deploy.ts",
+    "deploy:robinhood-testnet": "hardhat run --network robinhoodTestnet scripts/deploy.ts",
     "verify:registry": "hardhat --network arbitrumSepolia verify 0xfce6bd68d8d6f858d447f537d206c1e354b44315",
     "verify:escrow": "hardhat --network arbitrumSepolia verify 0x599869cef2e4c52e2c9074caaf8f9fb0cb191776 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d 0xfce6bd68d8d6f858d447f537d206c1e354b44315 0xe10cff27c99074cd44c64bed1b000226442524a4",
     "demo": "./scripts/arbitrum-demo.sh"

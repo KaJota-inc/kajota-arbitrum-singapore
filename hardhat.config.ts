@@ -91,6 +91,22 @@ const config: HardhatUserConfig = {
       accounts: deployerAccounts,
       chainId: 421614,
     },
+    // Robinhood Chain testnet — Arbitrum Orbit L2 launched 2026. The
+    // Singapore buildathon reserves one podium slot per track for
+    // projects deployed here (verbatim from the Prizes & Judging page:
+    // "At minimum, 1 of 3 prizes is reserved for a project building on
+    // Robinhood Chain"). RPC + explorer + faucet from Robinhood docs;
+    // ⚠ mainnet chainId is 4663 — off-by-a-factor-of-10 from this
+    // testnet 46630. Do not confuse; the config here is testnet only.
+    robinhoodTestnet: {
+      type: "http",
+      chainType: "l1",
+      url:
+        process.env.ROBINHOOD_TESTNET_RPC ??
+        "https://rpc.testnet.chain.robinhood.com",
+      accounts: deployerAccounts,
+      chainId: 46630,
+    },
   },
   // Etherscan V2 unified API — one key from etherscan.io/arbiscan.io
   // covers every chain id. Required for `pnpm hardhat verify`.
