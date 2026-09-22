@@ -157,7 +157,18 @@ async function main() {
   // the binding against the ERC-8004 registry on its home chain.
   console.log("Deploying AgentIdentityBinding …");
   const identityBinding = await viem.deployContract("AgentIdentityBinding");
-  console.log(`  → AgentIdentityBinding @ ${identityBinding.address}\n`);
+  console.log(`  → AgentIdentityBinding @ ${identityBinding.address}`);
+
+  // ---- 7. X402DepositFacilitator (gasless deposit path) -----------
+  // Server-side settlement contract that consumes a buyer's EIP-3009
+  // TransferWithAuthorization and completes the CosellEscrowV2.deposit
+  // in one relay. Wired to the v2 escrow; the buyer never touches ETH.
+  console.log("Deploying X402DepositFacilitator …");
+  const x402 = await viem.deployContract("X402DepositFacilitator", [
+    usdcAddress,
+    escrowV2.address,
+  ]);
+  console.log(`  → X402DepositFacilitator @ ${x402.address}\n`);
 
   // ---- 6. Persist addresses ---------------------------------------
   const deploymentsDir = path.resolve(
@@ -180,6 +191,7 @@ async function main() {
       escrowV2: escrowV2.address,
       kajotaEscrow: kajotaEscrow.address,
       agentIdentityBinding: identityBinding.address,
+      x402DepositFacilitator: x402.address,
     },
     deployedAt: new Date().toISOString(),
   };
@@ -209,6 +221,10 @@ async function main() {
   );
   console.log(
     `     npx hardhat verify --network ${network.name} ${identityBinding.address}`,
+  );
+  console.log(
+    `     npx hardhat verify --network ${network.name} ${x402.address} \\\n` +
+      `       ${usdcAddress} ${escrowV2.address}`,
   );
   console.log(
     "  2. Update scripts/arbitrum-demo.sh + demo/SHOT_LIST.md with the new addresses.",
