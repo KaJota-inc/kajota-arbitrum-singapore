@@ -149,7 +149,15 @@ async function main() {
     usdcAddress,
     releaseAuth, // reuse the same address as the dispute resolver on testnet
   ]);
-  console.log(`  → KajotaEscrow     @ ${kajotaEscrow.address}\n`);
+  console.log(`  → KajotaEscrow     @ ${kajotaEscrow.address}`);
+
+  // ---- 6. AgentIdentityBinding (ERC-8004 cross-chain hop) ---------
+  // Records the caller EOA → (agentId on home registry, homeChainId).
+  // Off-chain readers (a Chainlink Functions call, an indexer) resolve
+  // the binding against the ERC-8004 registry on its home chain.
+  console.log("Deploying AgentIdentityBinding …");
+  const identityBinding = await viem.deployContract("AgentIdentityBinding");
+  console.log(`  → AgentIdentityBinding @ ${identityBinding.address}\n`);
 
   // ---- 6. Persist addresses ---------------------------------------
   const deploymentsDir = path.resolve(
@@ -171,6 +179,7 @@ async function main() {
       registryV2: registryV2.address,
       escrowV2: escrowV2.address,
       kajotaEscrow: kajotaEscrow.address,
+      agentIdentityBinding: identityBinding.address,
     },
     deployedAt: new Date().toISOString(),
   };
@@ -197,6 +206,9 @@ async function main() {
   console.log(
     `     npx hardhat verify --network ${network.name} ${kajotaEscrow.address} \\\n` +
       `       ${usdcAddress} ${releaseAuth}`,
+  );
+  console.log(
+    `     npx hardhat verify --network ${network.name} ${identityBinding.address}`,
   );
   console.log(
     "  2. Update scripts/arbitrum-demo.sh + demo/SHOT_LIST.md with the new addresses.",
