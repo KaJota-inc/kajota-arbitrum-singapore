@@ -2,7 +2,7 @@
 
 > **Kajota Mesh is the atomic escrow + commission-split settlement primitive for commerce agents on Arbitrum.** USDC in, N-party split out, one tx. Registry semantics are deactivate-only so an agent that drafted a listing can't retroactively cut its counterparty's share after volume lands.
 >
-> Four composable contracts around the primitive: **v1** (2-party split) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). **97 unit tests · six-contract live stack verified on Arbiscan + Sourcify · deploys to Arbitrum Sepolia + Robinhood Chain testnet in one script.**
+> Four composable contracts around the primitive: **v1** (2-party split) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). Settles in either **Circle USDC** or **Paxos USDG** against the same shared registry. **97 unit tests · eight-contract live stack verified on Arbiscan + Sourcify · deploys to Arbitrum Sepolia + Robinhood Chain testnet in one script.**
 >
 > Coach (sell-side drafting agent) and Concierge (buy-side purchase agent) are the **reference integration** below — proof the primitive plugs into real agents. Bring your own.
 
@@ -22,7 +22,7 @@ Mesh removes (1) and (3) by moving the trust-critical primitives on-chain. Coach
 
 ## What's deployed on Arbitrum Sepolia
 
-All six contracts of the extended primitive are live and source-verified on **Arbiscan + Sourcify** — click any `0x…#code` link to read the Solidity as-deployed.
+All eight contracts of the extended primitive are live and source-verified on **Arbiscan + Sourcify** — click any `0x…#code` link to read the Solidity as-deployed.
 
 | Contract | Purpose | Address |
 |---|---|---|
@@ -32,7 +32,10 @@ All six contracts of the extended primitive are live and source-verified on **Ar
 | `CosellEscrowV2` | N-party fan-out at release. Rounding remainder falls to the last recipient by convention; zero dust retained by the escrow. | [`0xce77674ef1f3abcd34370825390f351eb6a8fffd`](https://sepolia.arbiscan.io/address/0xce77674ef1f3abcd34370825390f351eb6a8fffd#code) |
 | `AgentIdentityBinding` | Records `(agentId, homeRegistry, homeChainId, attestationHash)` per caller EOA — the on-chain hop from Arbitrum Sepolia to Coach's **ERC-8004** identity on Mantle Sepolia. | [`0x716d9c1229d38ec6f6cd7a5edd781e757a73f629`](https://sepolia.arbiscan.io/address/0x716d9c1229d38ec6f6cd7a5edd781e757a73f629#code) |
 | `X402DepositFacilitator` | Server-side of the **x402** gasless-deposit flow. Consumes an EIP-3009 `TransferWithAuthorization` from the buyer, pulls USDC, calls `CosellEscrowV2.deposit` in one relay. See [`docs/X402.md`](docs/X402.md). | [`0xdbae565ce0be455e859cd8ff42aec8ad30bbbcf9`](https://sepolia.arbiscan.io/address/0xdbae565ce0be455e859cd8ff42aec8ad30bbbcf9#code) |
+| `CosellEscrowV2` (USDG) | Paxos USDG-flavored v2 escrow — same code, different settlement token. Registers against the shared `CosellRegistryV2`. | [`0xfc82984e0282af934dca6c38d715235d491303c2`](https://sepolia.arbiscan.io/address/0xfc82984e0282af934dca6c38d715235d491303c2#code) |
+| `X402DepositFacilitator` (USDG) | Paxos USDG-flavored x402 facilitator, wired to the USDG escrow. EIP-3009 works identically to USDC's — Paxos ships the same spec. | [`0x15f42a9f92ab72ec67fb4298f9a95a476382d0ac`](https://sepolia.arbiscan.io/address/0x15f42a9f92ab72ec67fb4298f9a95a476382d0ac#code) |
 | Circle USDC | Native Arbitrum Sepolia USDC (6-decimal). | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/token/0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d) |
+| Paxos USDG | Native Arbitrum Sepolia USDG (6-decimal). Standard ERC-20 + EIP-3009 + EIP-2612. | [`0xFFC95faa3d63Cde504a05B567C600B78C0b41892`](https://sepolia.arbiscan.io/token/0xFFC95faa3d63Cde504a05B567C600B78C0b41892) |
 
 Manifest: [`deployments/421614.json`](deployments/421614.json).
 
@@ -50,6 +53,8 @@ The verified v1 pair settles two-party trades. The rest of the stack **extends t
 | `KajotaEscrow` | Single-recipient escrow with a full dispute path (`raiseDispute` / `resolveDispute`), timeout refund, and Chainlink Functions resolver hook. Reused verbatim from the ETHGlobal NY build — layered story rather than a duplicate primitive. | (baseline) |
 
 All four compile against the same OpenZeppelin 5.1 + Solidity 0.8.24 + EVM Cancun toolchain. `MockUSDC` (test-only, `contracts/test/`) implements EIP-3009 byte-for-byte compatible with Circle's canonical domain so the x402 unit tests double as smoke tests for the real-USDC path on Arbitrum Sepolia.
+
+**Multi-stablecoin settlement.** Because both escrow and facilitator take an `IERC20` at construction, the same code deploys against any standard 6-decimal stablecoin. Two token variants are live and verified on Arbitrum Sepolia today: the Circle USDC pair (addresses above) and a Paxos USDG pair (`CosellEscrowV2 → 0xfc82984e…` + `X402DepositFacilitator → 0x15f42a9f…`). The v2 registry is shared across both — a listing can settle in whichever token the buyer signs an authorization for. Operational note for production users: Paxos' `ASSET_PROTECTION_ROLE` can freeze balances via `isFrozen(address)`, so an escrow holding USDG carries a distinct trust surface from one holding USDC. Not a concern for testnet demos; worth naming for anyone forking the primitive.
 
 ## Agentic chain
 
