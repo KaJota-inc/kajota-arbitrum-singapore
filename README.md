@@ -154,13 +154,18 @@ Balance delta (USDC, 6-decimal, 1 USDC deposited):
 
 ## Positioning vs adjacent Arbitrum work
 
-Adjacent projects that appeared on prior Arbitrum Open House podiums:
+Adjacent projects on prior Arbitrum Open House podiums:
 
 - **Pact Network** (Open House London Agentic, 3rd) — risk layer for agentic payments. **Different problem:** Pact assesses counterparty and execution risk *before* funds move; Mesh atomically enforces the agreed split *when* funds move. They stack — a Pact-gated flow that uses Mesh for the settlement leg loses no property of either. Mesh is not trying to price risk.
 - **Fangorn** (Open House NYC, 2nd) — data commerce primitives for the agentic web, built with Stylus + ERC-8004 + x402. **Different vertical, overlapping toolkit:** Fangorn's primitives compensate agents for producing data; Mesh's primitive settles commerce that agents *coordinate on humans' behalf* — different sender-vs-recipient shape entirely. Where we borrow from Fangorn's toolkit we do so honestly and cite the file: `AgentIdentityBinding` gives Mesh an ERC-8004 cross-chain hop to Coach's Mantle identity, and `X402DepositFacilitator` implements the server-side of the x402 gasless-deposit path (see [docs/X402.md](docs/X402.md)). Stylus is parked pending a proper Arbitrum-Rust cycle.
 - **TradeVerus / CapricornDEX / Denaria** (London Open) — trading infrastructure. **Different vertical entirely.**
 
-Mesh's specific slice: **settlement primitive for two-sided agent commerce with a fixed, contract-enforced fee split.** No known Arbitrum podium winner sits on that slice today.
+Adjacent projects also in this Singapore field:
+
+- **Debit Llama** — "a subscription-first alternative to x402 for agents", with account abstraction, zk-proofs, and MCP server integration. Also settles USDG on Arbitrum. **Different shape:** Debit Llama is *pull-payment / recurring debit* — the buyer pre-authorizes a stream the merchant can draw from. Mesh is *one-shot atomic settlement with an N-party split* — one deposit fans to multiple recipients when a delivery condition is met. Both belong in the "agentic payment infra" bucket; the primitives compose (a Debit Llama pull could fund a Mesh escrow, atomically distributed on release), but they're solving different problems. Debit Llama does not implement multi-party fee splits or a coordination-surface registry.
+- **StewardPay** — text-message-first RWA purchase agent on Robinhood Chain, USDG-native. **Different vertical:** Steward turns "text `Buy AAPL with 0.5 USDG`" into a stock purchase; the settlement leg is a single-recipient DEX trade, not a multi-party commerce split. No overlap on the fee-split or N-party dimension.
+
+Mesh's specific slice: **atomic escrow with a contract-enforced N-party fee split, coordinated by an on-chain registry that adversarial commerce agents can both trust.** As of this scouting pass (Sep 28, 2026) no other project in the Singapore field sits on that slice.
 
 ## Repo layout
 
