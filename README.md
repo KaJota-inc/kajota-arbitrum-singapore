@@ -2,7 +2,7 @@
 
 > **Kajota Mesh is the atomic escrow + commission-split settlement primitive for commerce agents on Arbitrum.** USDC in, N-party split out, one tx. Registry semantics are deactivate-only so an agent that drafted a listing can't retroactively cut its counterparty's share after volume lands.
 >
-> Four composable contracts around the primitive: **v1** (2-party split) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). Settles in either **Circle USDC** or **Paxos USDG** against the same shared registry. **97 unit tests · eight-contract live stack verified on Arbiscan + Sourcify · deploys to Arbitrum Sepolia + Robinhood Chain testnet in one script.**
+> Four composable contracts around the primitive: **v1** (2-party split) · **v2** (N-party split, additive) · **AgentIdentityBinding** (ERC-8004 cross-chain hop) · **X402DepositFacilitator** (gasless deposits via EIP-3009). Settles in either **Circle USDC** or **Paxos USDG** against the same shared registry. **97 unit tests · live and verified on both Arbitrum Sepolia and Robinhood Chain testnet · 17 deployed-and-verified contracts across the two chains.**
 >
 > Coach (sell-side drafting agent) and Concierge (buy-side purchase agent) are the **reference integration** below — proof the primitive plugs into real agents. Bring your own.
 
@@ -37,9 +37,27 @@ All eight contracts of the extended primitive are live and source-verified on **
 | Circle USDC | Native Arbitrum Sepolia USDC (6-decimal). | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/token/0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d) |
 | Paxos USDG | Native Arbitrum Sepolia USDG (6-decimal). Standard ERC-20 + EIP-3009 + EIP-2612. | [`0xFFC95faa3d63Cde504a05B567C600B78C0b41892`](https://sepolia.arbiscan.io/token/0xFFC95faa3d63Cde504a05B567C600B78C0b41892) |
 
-Manifest: [`deployments/421614.json`](deployments/421614.json).
+Manifest: [`deployments/421614.json`](deployments/421614.json). `KajotaEscrow` (single-recipient + dispute path) is additionally live on Robinhood Chain testnet (section below).
 
-`KajotaEscrow` (single-recipient + dispute path) is compiled + tested in-repo and ships alongside the Robinhood Chain testnet deploy — `pnpm deploy:robinhood-testnet` puts every contract above plus `KajotaEscrow` live on the reserved-slot lane in one run.
+## Also live on Robinhood Chain Testnet (chainId 46630)
+
+Deployed Oct 2, 2026 — same source, same OpenZeppelin 5.1 toolchain, same test suite. Reserved-slot lane per the buildathon's Prizes & Judging page (*"At minimum 1 of 3 prizes is reserved for a project building on Robinhood Chain"*). All nine contracts source-verified on **Sourcify** against chain 46630.
+
+| Contract | Purpose | Address |
+|---|---|---|
+| `MockUSDC` (6-decimal) | Mock ERC-20 used in place of Circle USDC (not yet native on Robinhood testnet). Standard decimals + mint for testnet use. | [`0xfce6…44315`](https://explorer.testnet.chain.robinhood.com/address/0xfce6bd68d8d6f858d447f537d206c1e354b44315) |
+| `CosellRegistry` (v1) | Same as Arbitrum Sepolia. | [`0x5998…91776`](https://explorer.testnet.chain.robinhood.com/address/0x599869cef2e4c52e2c9074caaf8f9fb0cb191776) |
+| `CosellEscrow` (v1) | Same as Arbitrum Sepolia. | [`0xd509…4148`](https://explorer.testnet.chain.robinhood.com/address/0xd5090ebc41c8869fdf821cc5ef49f23b7baf4148) |
+| `CosellRegistryV2` | Same as Arbitrum Sepolia. | [`0x69a2…1fc58`](https://explorer.testnet.chain.robinhood.com/address/0x69a2dceca723b3ae335806cfae22e2ffea51fc58) |
+| `CosellEscrowV2` (MockUSDC) | v2 escrow wired to the MockUSDC above. | [`0x7a6f…a95c`](https://explorer.testnet.chain.robinhood.com/address/0x7a6fef53c85bd7ffc70c16d21b73f3125258a95c) |
+| `KajotaEscrow` | Single-recipient + dispute path. | [`0x11b7…80ef`](https://explorer.testnet.chain.robinhood.com/address/0x11b7b2dd613d81f9ac1eceb7a57b3feba4d580ef) |
+| `AgentIdentityBinding` | ERC-8004 cross-chain hop. | [`0x6d92…ea58`](https://explorer.testnet.chain.robinhood.com/address/0x6d92991047f82d38347e33c24c8a24e3c65dea58) |
+| `X402DepositFacilitator` (MockUSDC) | x402 facilitator wired to MockUSDC + v2 escrow. | [`0xaad4…63fa5`](https://explorer.testnet.chain.robinhood.com/address/0xaad4f90c1eba70b3c70b7d2d6f21c6ab46763fa5) |
+| `CosellEscrowV2` (**USDG**) | v2 escrow wired to Paxos' canonical USDG on Robinhood testnet. | [`0x9eae…4ea6`](https://explorer.testnet.chain.robinhood.com/address/0x9eae832c96cdb5655122adfff76da05cc2a24ea6) |
+| `X402DepositFacilitator` (**USDG**) | x402 facilitator wired to USDG. | [`0xd36e…78b3`](https://explorer.testnet.chain.robinhood.com/address/0xd36e3e9ede45077b8d5b9b4e6839c66cdbb378b3) |
+| Paxos USDG | Canonical USDG on Robinhood testnet (6-decimal, EIP-3009 + EIP-2612). | [`0x7E95…802F`](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) |
+
+Manifest: [`deployments/46630.json`](deployments/46630.json). Combined deploy gas across both USDC-flavored and USDG-flavored stacks: **~0.00009 ETH** on Robinhood testnet.
 
 ## The primitive, extended
 

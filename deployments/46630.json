@@ -1,0 +1,22 @@
+{
+  "chainId": 46630,
+  "chainName": "Robinhood Chain Testnet",
+  "deployer": "0xe10cff27c99074cd44c64bed1b000226442524a4",
+  "usdc": "0xfce6bd68d8d6f858d447f537d206c1e354b44315",
+  "usdcSource": "MockUSDC (this repo)",
+  "releaseAuth": "0xe10cff27c99074cd44c64bed1b000226442524a4",
+  "contracts": {
+    "registry": "0x599869cef2e4c52e2c9074caaf8f9fb0cb191776",
+    "escrow": "0xd5090ebc41c8869fdf821cc5ef49f23b7baf4148",
+    "registryV2": "0x69a2dceca723b3ae335806cfae22e2ffea51fc58",
+    "escrowV2": "0x7a6fef53c85bd7ffc70c16d21b73f3125258a95c",
+    "kajotaEscrow": "0x11b7b2dd613d81f9ac1eceb7a57b3feba4d580ef",
+    "agentIdentityBinding": "0x6d92991047f82d38347e33c24c8a24e3c65dea58",
+    "x402DepositFacilitator": "0xaad4f90c1eba70b3c70b7d2d6f21c6ab46763fa5",
+    "escrowV2Usdg": "0x9eae832c96cdb5655122adfff76da05cc2a24ea6",
+    "x402DepositFacilitatorUsdg": "0xd36e3e9ede45077b8d5b9b4e6839c66cdbb378b3"
+  },
+  "deployedAt": "2026-10-02T12:12:26.150Z",
+  "usdg": "0x7E955252E15c84f5768B83c41a71F9eba181802F",
+  "usdgDeployedAt": "2026-10-02T12:13:00.160Z"
+}
