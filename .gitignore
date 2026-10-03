@@ -9,4 +9,17 @@ typechain-types/
 coverage/
 .DS_Store
 *.log
-demo/
+# demo/ — local scaffolding and generated dry-run artifacts stay out of git.
+# The shipped UI (demo/ui/) and reproducible pipeline scripts (demo/dryrun*.sh)
+# are the exceptions and ARE committed.
+demo/SHOT_LIST.md
+demo/SUBMIT_FORM.md
+demo/RECORDING.md
+demo/scenes/
+demo/vo/
+demo/captures/
+demo/out/
+demo/dryrun/
+demo/dryrun-ui/
+demo/ui/shots/
+demo/ui/.vercel/

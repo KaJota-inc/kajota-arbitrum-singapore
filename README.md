@@ -8,6 +8,8 @@
 
 > **Status — active submission.** Submission window closes **Oct 4, 2026 15:59 Asia/Singapore**. Prize pool $115K USDC (Overall $70K + Promising Products $15K + Grants $30K). Arbitrum Sepolia deployment satisfies the buildathon deployment rule.
 
+**Live demo:** [**kajota-mesh.vercel.app**](https://kajota-mesh.vercel.app) — connect any wallet, register a listing on `CosellRegistryV2` from your own address, see the tx on Arbiscan in two seconds. No USDC required (gas only; Alchemy Sepolia faucet dispenses in 10 s).
+
 **HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh) · **Stack:** Solidity 0.8.24 · OpenZeppelin 5.1 · viem · Hardhat 3 · Chainlink Functions
 
 ## The problem
