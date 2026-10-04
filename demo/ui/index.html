@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kajota Mesh — settlement primitive for commerce agents on Arbitrum</title>
   <meta name="description" content="Atomic escrow + N-party commission split for commerce agents. One USDC in, N parties out, in one atomic release. Live on Arbitrum Sepolia and Robinhood Chain." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://kajota-mesh.vercel.app" />
+  <meta property="og:title" content="Kajota Mesh — atomic settlement for commerce agents on Arbitrum" />
+  <meta property="og:description" content="One USDC in. N parties out. In one atomic settlement. 17 verified contracts across Arbitrum Sepolia + Robinhood Chain, USDC & Paxos USDG. First agent-authored settlement live Oct 4." />
+  <meta property="og:image" content="https://kajota-mesh.vercel.app/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Kajota Mesh — atomic settlement for commerce agents on Arbitrum" />
+  <meta name="twitter:description" content="One USDC in. N parties out. In one atomic settlement. Live on Arbitrum Sepolia + Robinhood Chain, with on-chain counters you can watch climb." />
+  <meta name="twitter:image" content="https://kajota-mesh.vercel.app/og.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -237,6 +248,16 @@
         <div class="text-[10.5px] uppercase tracking-[0.15em] mute-2 mb-2">Recipients fanned out</div>
         <div id="recipientsCount" class="serif text-[44px] leading-none" style="color:#e879f9">—</div>
         <div class="text-[11px] mute mt-2 mono">zero dust retained</div>
+      </div>
+    </div>
+    <div class="mt-5 grid grid-cols-2 gap-5">
+      <div class="rounded-xl p-4 bg-black/20 border border-[var(--line)]">
+        <div class="text-[10.5px] uppercase tracking-[0.15em] mute-2 mb-1 flex items-center gap-2"><span class="glow-dot"></span>Arbitrum Sepolia</div>
+        <div class="text-[13px] mt-1"><span id="arbListings" class="mono lime">—</span> listings · <span id="arbDeposits" class="mono">—</span> deposits · <span id="arbVolume" class="mono cyan">—</span></div>
+      </div>
+      <div class="rounded-xl p-4 bg-black/20 border border-[var(--line)]">
+        <div class="text-[10.5px] uppercase tracking-[0.15em] mute-2 mb-1 flex items-center gap-2"><span class="glow-dot glow-dot-cyan"></span>Robinhood Chain testnet <span class="pill chip-lime text-[9px]" style="padding:0 6px">reserved</span></div>
+        <div class="text-[13px] mt-1"><span id="rhListings" class="mono lime">—</span> listings · <span id="rhDeposits" class="mono">—</span> deposits · <span id="rhVolume" class="mono cyan">—</span></div>
       </div>
     </div>
     <div class="mt-5 pt-4 divider text-[11px] mute leading-relaxed">
@@ -545,6 +566,23 @@
     transport: http('https://sepolia-rollup.arbitrum.io/rpc'),
   });
 
+  // Robinhood Chain testnet (chainId 46630). Not in viem's chains list, so
+  // declare it inline. Used only for log queries from here — no writes.
+  const robinhoodChain = {
+    id: 46630,
+    name: 'Robinhood Chain Testnet',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: { default: { http: ['https://rpc.testnet.chain.robinhood.com'] } },
+    blockExplorers: { default: { name: 'Blockscout', url: 'https://explorer.testnet.chain.robinhood.com' } },
+  };
+  const robinhoodClient = createPublicClient({
+    chain: robinhoodChain,
+    transport: http('https://rpc.testnet.chain.robinhood.com'),
+  });
+
+  const ROBINHOOD_REGISTRY_V2 = '0x69a2dceca723b3ae335806cfae22e2ffea51fc58';
+  const ROBINHOOD_ESCROW_V2   = '0x7a6fef53c85bd7ffc70c16d21b73f3125258a95c';
+
   const REGISTRY_ABI = parseAbi([
     'function register(string productId, address[] recipients, uint16[] shares, string currency) returns (bytes32)',
     'function computeListingId(string productId, address registrant, address[] recipients, uint16[] shares) view returns (bytes32)',
@@ -582,53 +620,69 @@
   }
 
   // --- Protocol usage counters ---
-  // Query ListingRegistered / Deposited / Released event logs via getLogs,
-  // chunked to stay under common RPC per-call block-range limits.
+  // Query event logs on BOTH reserved-slot chains. Chunked to stay under
+  // common public-RPC per-call block-range limits.
+  const regEvent = REGISTRY_ABI.find(x => x.type === 'event' && x.name === 'ListingRegistered');
+  const depEvent = ESCROW_ABI.find(x => x.type === 'event' && x.name === 'Deposited');
+  const relEvent = ESCROW_ABI.find(x => x.type === 'event' && x.name === 'Released');
+
+  async function countChain(cli, registry, escrow, lookback, chunk) {
+    const latest = await cli.getBlockNumber();
+    const from = latest > lookback ? latest - lookback : 0n;
+    let listings = 0, deposits = 0, releases = 0, totalRecipients = 0;
+    let totalWei = 0n;
+    for (let s = from; s <= latest; s += chunk) {
+      const e = (s + chunk - 1n > latest) ? latest : s + chunk - 1n;
+      try {
+        const [regs, deps, rels] = await Promise.all([
+          cli.getLogs({ address: registry, event: regEvent, fromBlock: s, toBlock: e }),
+          cli.getLogs({ address: escrow,   event: depEvent, fromBlock: s, toBlock: e }),
+          cli.getLogs({ address: escrow,   event: relEvent, fromBlock: s, toBlock: e }),
+        ]);
+        listings += regs.length;
+        deposits += deps.length;
+        releases += rels.length;
+        deps.forEach(d => { try { totalWei += (d.args?.grossAmount ?? 0n); } catch {} });
+        rels.forEach(r => { try { totalRecipients += (r.args?.recipients?.length ?? 0); } catch {} });
+      } catch {}
+    }
+    return { listings, deposits, releases, totalRecipients, totalWei };
+  }
+
   async function hydrateUsage() {
     const statusEl = document.getElementById('usageStatus');
+    statusEl.textContent = 'querying both chains…';
     try {
-      const latest = await client.getBlockNumber();
-      // Deployment landed around Arb Sepolia block ~313.2M on Sep 22. We
-      // query from ~2.5M blocks back to safely cover both the bootstrap run
-      // and today's Oct 4 agent-authored run. Chunk by 500K to stay within
-      // the public RPC's per-request range cap.
-      const CHUNK = 500000n;
-      const from = latest > 2500000n ? latest - 2500000n : 0n;
+      // Arb Sepolia: 2.5M blocks ≈ 2 weeks; Robinhood: shorter chain so a
+      // wider window still finishes fast.
+      const [arb, rh] = await Promise.allSettled([
+        countChain(client, REGISTRY_V2, ESCROW_V2, 2500000n, 500000n),
+        countChain(robinhoodClient, ROBINHOOD_REGISTRY_V2, ROBINHOOD_ESCROW_V2, 500000n, 100000n),
+      ]);
+      const A = arb.status === 'fulfilled' ? arb.value : { listings:0, deposits:0, totalWei:0n, totalRecipients:0 };
+      const R = rh.status  === 'fulfilled' ? rh.value  : { listings:0, deposits:0, totalWei:0n, totalRecipients:0 };
 
-      const listingTopic = '0x' + 'ListingRegistered(bytes32,string,address,address[],uint16[],string)';
-      // Instead of hashing manually, use viem's abi-based event filter via getContractEvents equivalent (getLogs with eventName)
-      const regEvent = REGISTRY_ABI.find(x => x.type === 'event' && x.name === 'ListingRegistered');
-      const depEvent = ESCROW_ABI.find(x => x.type === 'event' && x.name === 'Deposited');
-      const relEvent = ESCROW_ABI.find(x => x.type === 'event' && x.name === 'Released');
+      const total = {
+        listings:   A.listings + R.listings,
+        deposits:   A.deposits + R.deposits,
+        totalWei:   A.totalWei + R.totalWei,
+        recipients: A.totalRecipients + R.totalRecipients,
+      };
 
-      let listings = 0, deposits = 0, releases = 0;
-      let totalRecipients = 0;
-      let totalWei = 0n;
+      document.getElementById('listingsCount').textContent   = total.listings.toLocaleString();
+      document.getElementById('depositsCount').textContent   = total.deposits.toLocaleString();
+      document.getElementById('volumeCount').textContent     = formatUnits(total.totalWei, 6) + ' USDC';
+      document.getElementById('recipientsCount').textContent = total.recipients.toLocaleString();
 
-      for (let start = from; start <= latest; start += CHUNK) {
-        const end = start + CHUNK - 1n > latest ? latest : start + CHUNK - 1n;
-        try {
-          const [regs, deps, rels] = await Promise.all([
-            client.getLogs({ address: REGISTRY_V2, event: regEvent, fromBlock: start, toBlock: end }),
-            client.getLogs({ address: ESCROW_V2,   event: depEvent, fromBlock: start, toBlock: end }),
-            client.getLogs({ address: ESCROW_V2,   event: relEvent, fromBlock: start, toBlock: end }),
-          ]);
-          listings += regs.length;
-          deposits += deps.length;
-          releases += rels.length;
-          deps.forEach(d => { try { totalWei += (d.args?.grossAmount ?? 0n); } catch {} });
-          rels.forEach(r => { try { totalRecipients += (r.args?.recipients?.length ?? 0); } catch {} });
-        } catch (e) {
-          // RPC rejected the range — skip this chunk silently and continue
-        }
-      }
+      document.getElementById('arbListings').textContent = A.listings;
+      document.getElementById('arbDeposits').textContent = A.deposits;
+      document.getElementById('arbVolume').textContent   = formatUnits(A.totalWei, 6) + ' USDC';
+      document.getElementById('rhListings').textContent  = R.listings;
+      document.getElementById('rhDeposits').textContent  = R.deposits;
+      document.getElementById('rhVolume').textContent    = formatUnits(R.totalWei, 6) + ' USDC';
 
-      document.getElementById('listingsCount').textContent = listings.toLocaleString();
-      document.getElementById('depositsCount').textContent = deposits.toLocaleString();
-      document.getElementById('volumeCount').textContent = formatUnits(totalWei, 6) + ' USDC';
-      document.getElementById('recipientsCount').textContent = totalRecipients.toLocaleString();
-      statusEl.textContent = 'live · updated ' + new Date().toLocaleTimeString();
-    } catch (e) {
+      statusEl.textContent = 'live · 2 chains · ' + new Date().toLocaleTimeString();
+    } catch {
       statusEl.textContent = 'rpc degraded';
     }
   }
