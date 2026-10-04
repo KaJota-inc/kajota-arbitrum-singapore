@@ -239,13 +239,19 @@
         <div class="text-[11px] mute mt-2 mono">zero dust retained</div>
       </div>
     </div>
-    <div class="mt-5 pt-4 divider text-[11px] mute">
-      Includes the Sep 22 bootstrap run and the <strong class="text-neutral-200">Oct 4 agent-authored settlement</strong>:
-      Coach registered → Concierge deposited 1 USDC → release authority fanned to three recipients, atomically.
-      Receipts: <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0x07b1930248fec948e8c46a810bdec270177937181da549a306cfb9cecaa86dd2" target="_blank">register</a> ·
-      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0xeabdcb5213ea6ab1cf62bfc665213e749d788e028515d08440b148a5decbdf5e" target="_blank">approve</a> ·
-      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0xf6674b803b264274c34c9142142a062f6cd792aa07a8968c9f9e7abdc1a198be" target="_blank">deposit</a> ·
-      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0x1b42ee6b0b39d99bf205d25e0bed0a1cd82843b9e99ce0de8eddfa9a20d4033b" target="_blank">release</a>.
+    <div class="mt-5 pt-4 divider text-[11px] mute leading-relaxed">
+      <strong class="text-neutral-200">Oct 4 — same primitive, both reserved-slot chains, same session.</strong><br/>
+      <span class="lime">●</span> <strong class="text-neutral-200">Arbitrum Sepolia</strong>:
+      Coach <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0x07b1930248fec948e8c46a810bdec270177937181da549a306cfb9cecaa86dd2" target="_blank">registers</a> → Concierge
+      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0xeabdcb5213ea6ab1cf62bfc665213e749d788e028515d08440b148a5decbdf5e" target="_blank">approves</a> +
+      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0xf6674b803b264274c34c9142142a062f6cd792aa07a8968c9f9e7abdc1a198be" target="_blank">deposits 1 USDC</a> → release authority
+      <a class="underline hover:text-neutral-100" href="https://sepolia.arbiscan.io/tx/0x1b42ee6b0b39d99bf205d25e0bed0a1cd82843b9e99ce0de8eddfa9a20d4033b" target="_blank">fans out</a>, zero dust.<br/>
+      <span class="cyan">●</span> <strong class="text-neutral-200">Robinhood Chain testnet</strong> (chainId 46630, reserved slot):
+      <a class="underline hover:text-neutral-100" href="https://explorer.testnet.chain.robinhood.com/tx/0x668c284e2efe9cdeef39f2f472e238c0d09727c6ae769818330361e6fe2452ef" target="_blank">mint 1 USDC</a> →
+      <a class="underline hover:text-neutral-100" href="https://explorer.testnet.chain.robinhood.com/tx/0x936563f81f657430c683efedf0aace68119096bbb7083a5b96773bd7d9e933df" target="_blank">register</a> →
+      <a class="underline hover:text-neutral-100" href="https://explorer.testnet.chain.robinhood.com/tx/0x56b1f7bca471c54bfeeea9428fe767010d7057e9845eba01e50a8a420c88e6f4" target="_blank">approve</a> +
+      <a class="underline hover:text-neutral-100" href="https://explorer.testnet.chain.robinhood.com/tx/0x6f4e973c5157b72dcd4ea8bcb87dea6a6823631a1aa837944bbb2bfbe644892a" target="_blank">deposit</a> →
+      <a class="underline hover:text-neutral-100" href="https://explorer.testnet.chain.robinhood.com/tx/0xfe611e11f020b9b550e8e66df21fdd363c6aff4e58e373a7d98035ccff7bc9d9" target="_blank">release</a>, atomically, zero dust.
     </div>
   </div>
 </section>

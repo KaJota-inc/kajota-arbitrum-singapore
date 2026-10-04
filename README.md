@@ -19,6 +19,15 @@
 
 Reproducible: [`./scripts/oct4-agent-settlement.sh`](scripts/oct4-agent-settlement.sh) — fires the same 4-tx flow with distinct caller roles against the live contracts.
 
+**Oct 4 — the same primitive, re-fired on Robinhood Chain testnet (chainId 46630).** Byte-identical bytecode on the reserved-slot lane. Mint 1 USDC via MockUSDC, Coach registers, Concierge deposits, release authority fans out — all in a single `./scripts/oct4-robinhood-settlement.sh` run. Receipts:
+
+- Mint 1 USDC: [`0x668c…52ef`](https://explorer.testnet.chain.robinhood.com/tx/0x668c284e2efe9cdeef39f2f472e238c0d09727c6ae769818330361e6fe2452ef)
+- Register: [`0x9365…33df`](https://explorer.testnet.chain.robinhood.com/tx/0x936563f81f657430c683efedf0aace68119096bbb7083a5b96773bd7d9e933df)
+- Approve + deposit: [`0x56b1…e6f4`](https://explorer.testnet.chain.robinhood.com/tx/0x56b1f7bca471c54bfeeea9428fe767010d7057e9845eba01e50a8a420c88e6f4) / [`0x6f4e…892a`](https://explorer.testnet.chain.robinhood.com/tx/0x6f4e973c5157b72dcd4ea8bcb87dea6a6823631a1aa837944bbb2bfbe644892a)
+- Release: [`0xfe61…c9d9`](https://explorer.testnet.chain.robinhood.com/tx/0xfe611e11f020b9b550e8e66df21fdd363c6aff4e58e373a7d98035ccff7bc9d9)
+
+The reserved-slot lane isn't just claimed — it's exercised with a full end-to-end settlement in the same session as the Arbitrum run.
+
 **HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh) · **Stack:** Solidity 0.8.24 · OpenZeppelin 5.1 · viem · Hardhat 3 · Chainlink Functions
 
 ## The problem
