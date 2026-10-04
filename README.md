@@ -8,7 +8,16 @@
 
 > **Status — active submission.** Submission window closes **Oct 4, 2026 15:59 Asia/Singapore**. Prize pool $115K USDC (Overall $70K + Promising Products $15K + Grants $30K). Arbitrum Sepolia deployment satisfies the buildathon deployment rule.
 
-**Live demo:** [**kajota-mesh.vercel.app**](https://kajota-mesh.vercel.app) — connect any wallet, register a listing on `CosellRegistryV2` from your own address, see the tx on Arbiscan in two seconds. No USDC required (gas only; Alchemy Sepolia faucet dispenses in 10 s).
+**Live demo:** [**kajota-mesh.vercel.app**](https://kajota-mesh.vercel.app) — hero reads live Arb Sepolia state via viem (`listings`, `deposits`, `USDC settled`, `recipients fanned out` — direct from the chain via `getLogs`, no indexer). Connect any wallet, register a listing on `CosellRegistryV2` from your own address, see the tx on Arbiscan in two seconds. No USDC required (gas only; Alchemy Sepolia faucet dispenses in 10 s).
+
+**Oct 4 — first agent-authored settlement.** Fired a fresh 3-party happy path with distinct caller-role separation: Coach (sell-side drafter) registered the listing, Concierge (buy-side purchaser) deposited 1 USDC, release authority atomically fanned the funds out across three recipients, zero dust retained. All four txs on-chain:
+
+- Coach registers listing: [`0x07b1…6dd2`](https://sepolia.arbiscan.io/tx/0x07b1930248fec948e8c46a810bdec270177937181da549a306cfb9cecaa86dd2)
+- Concierge approves USDC: [`0xeabd…df5e`](https://sepolia.arbiscan.io/tx/0xeabdcb5213ea6ab1cf62bfc665213e749d788e028515d08440b148a5decbdf5e)
+- Concierge deposits 1 USDC: [`0xf667…98be`](https://sepolia.arbiscan.io/tx/0xf6674b803b264274c34c9142142a062f6cd792aa07a8968c9f9e7abdc1a198be)
+- Release authority atomic fan-out: [`0x1b42…033b`](https://sepolia.arbiscan.io/tx/0x1b42ee6b0b39d99bf205d25e0bed0a1cd82843b9e99ce0de8eddfa9a20d4033b)
+
+Reproducible: [`./scripts/oct4-agent-settlement.sh`](scripts/oct4-agent-settlement.sh) — fires the same 4-tx flow with distinct caller roles against the live contracts.
 
 **HackQuest project page:** [arbitrum-singapore.hackquest.io/projects/Kajota-Mesh](https://arbitrum-singapore.hackquest.io/projects/Kajota-Mesh) · **Stack:** Solidity 0.8.24 · OpenZeppelin 5.1 · viem · Hardhat 3 · Chainlink Functions
 
